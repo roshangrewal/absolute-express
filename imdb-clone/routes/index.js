@@ -15,6 +15,12 @@ router.use((req, res, next) => {
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
+   // request.get takes 2 args:
+  // 1. it takes the URL to http "get"
+  // 2. the callback to run when the http response is back. 3 args:
+  //   1. error (if any)
+  //   2. http response
+  //   3. json/data the server sent back
   request.get(nowPlayingUrl, (error, response, movieData) => {
     // console.log('======== Error =========');
     // console.log(error);
@@ -33,6 +39,8 @@ router.get('/', function(req, res, next) {
   // res.render('index', { title: 'Express' });
 });
 
+// /movie/:id is a wildcard route. 
+// that means that :id is going to be stored in...
 router.get('/movie/:id', (req, res, next) => {
   const movieId = req.params.id;
   const thisMovieUrl = `${apiBaseUrl}/movie/${movieId}?api_key=${apiKey}`;
@@ -41,6 +49,25 @@ router.get('/movie/:id', (req, res, next) => {
     const parsedData = JSON.parse(movieData);
     res.render('single-movie', {
       parsedData: parsedData
+    })
+  })
+})
+
+router.post('/search',(req, res, next)=>{
+  // res.send("Sanity Check")
+  const userSearchTerm = encodeURI(req.body.movieSearch);
+  console.log(userSearchTerm);
+  const category = req.body.category;
+  const movieUrl = `${apiBaseUrl}/search/${category}?query=${userSearchTerm}&api_key=${apiKey}`
+  // res.send(movieUrl)
+  request.get(movieUrl,(error, response, movieData)=>{
+    let parsedData = JSON.parse(movieData);
+    // res.json(parsedData);
+    if(category=="person"){
+      parsedData.results = parsedData.results[0].known_for;
+    }
+    res.render('index', {
+      parsedData: parsedData.results
     })
   })
 })
